@@ -230,3 +230,14 @@ def calculate_b0_std_error_estimated(residual_variances, x_values, num_samples):
     return (residual_variances * (1 / num_samples + np.mean(x_values)**2 / np.sum((x_values - np.mean(x_values)) ** 2))) ** 0.5
 
 
+def calculate_prediction_intervals(x_full, x_train, b0, b1, residual_variance, z_critical):
+    """Calculate prediction intervals."""
+    y_pred = b0 + b1 * x_full
+
+    n_train = len(x_train)
+    x_muean = np.mean(x_train)
+    x_minus_mean_squared = (x_train - x_muean)**2
+    se = np.sqrt(residual_variance * (1 + 1/n_train + x_minus_mean_squared / np.sum(x_minus_mean_squared)))
+    y_pred_lower = y_pred - z_critical * se
+    y_pred_upper = y_pred + z_critical * se
+    return y_pred, y_pred_lower, y_pred_upper
