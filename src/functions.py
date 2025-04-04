@@ -3,6 +3,7 @@ from scipy.stats import norm
 import matplotlib.pyplot as plt
 from statsmodels.distributions.empirical_distribution import ECDF
 
+
 def moving_average(data, window_size):
     """
     Calculate the moving average of a given data array.
@@ -16,13 +17,15 @@ def moving_average(data, window_size):
     """
     n = len(data)
     if window_size > n:
-        raise ValueError("Window size must be less than or equal to the length of the data.")
+        raise ValueError(
+            "Window size must be less than or equal to the length of the data."
+        )
     if window_size % 2 == 0:
         raise ValueError("Window size must be an odd number.")
 
     result = np.zeros(n - window_size + 1)
     for i in range(n - window_size + 1):
-        result[i] = np.mean(data[i:i + window_size])
+        result[i] = np.mean(data[i: i + window_size])
     return result
 
 
@@ -46,20 +49,16 @@ def calculate_point_distances(x, y, slope, intercept):
     return distances
 
 
-
-def estimate_coefficients(x_values, y_values):
-    """Estimate coefficients b0 and b1 using OLS."""
-    b1_estimate = np.sum((x_values - np.mean(x_values)) * y_values) / np.sum((x_values - np.mean(x_values)) ** 2)
-    b0_estimate = np.mean(y_values) - b1_estimate * np.mean(x_values)
-    return b0_estimate, b1_estimate
-
 def calculate_theoretical_distributions(b0_true, b1_true, sigma, x_values, n_samples):
     """Calculate theoretical distributions for b0 and b1."""
-    b0_variance = sigma**2 / n_samples + np.mean(x_values)**2 * sigma**2 / np.sum((x_values - np.mean(x_values))**2)
-    b1_variance = sigma**2 / np.sum((x_values - np.mean(x_values))**2)
+    b0_variance = sigma**2 / n_samples + np.mean(x_values) ** 2 * sigma**2 / np.sum(
+        (x_values - np.mean(x_values)) ** 2
+    )
+    b1_variance = sigma**2 / np.sum((x_values - np.mean(x_values)) ** 2)
     b0_theoretical = norm(loc=b0_true, scale=np.sqrt(b0_variance))
     b1_theoretical = norm(loc=b1_true, scale=np.sqrt(b1_variance))
     return b0_theoretical, b1_theoretical
+
 
 def generate_simulation_data(x_values, b0, b1, sigma, n, mcs):
     """Generate simulation data for Monte Carlo simulations."""
@@ -69,22 +68,35 @@ def generate_simulation_data(x_values, b0, b1, sigma, n, mcs):
     for i in range(mcs):
         noise = np.random.normal(0, sigma, n)
         y_values = b0 + b1 * x_values + noise
-        b1_estimate = np.sum((x_values - np.mean(x_values)) * y_values) / np.sum((x_values - np.mean(x_values)) ** 2)
+        b1_estimate = np.sum((x_values - np.mean(x_values)) * y_values) / np.sum(
+            (x_values - np.mean(x_values)) ** 2
+        )
         b0_estimate = np.mean(y_values) - b1_estimate * np.mean(x_values)
         b0_estimates[i] = b0_estimate
         b1_estimates[i] = b1_estimate
-        residual_variances[i] = np.sum((y_values - (b0_estimate + b1_estimate * x_values)) ** 2) / (n - 2)
+        residual_variances[i] = np.sum(
+            (y_values - (b0_estimate + b1_estimate * x_values)) ** 2
+        ) / (n - 2)
     return b0_estimates, b1_estimates, residual_variances
 
-def calculate_t_statistics(b_estimates, true_value, residual_variances, x_values, n, b_type):
+
+def calculate_t_statistics(
+    b_estimates, true_value, residual_variances, x_values, n, b_type
+):
     """Calculate t-statistics for B0 or B1."""
     if b_type == "b1":
-        denominator = np.sqrt(residual_variances) / np.sqrt(np.sum((x_values - np.mean(x_values)) ** 2))
+        denominator = np.sqrt(residual_variances) / np.sqrt(
+            np.sum((x_values - np.mean(x_values)) ** 2)
+        )
     elif b_type == "b0":
-        denominator = np.sqrt(residual_variances) * np.sqrt(1 / n + np.mean(x_values) ** 2 / np.sum((x_values - np.mean(x_values)) ** 2))
+        denominator = np.sqrt(residual_variances) * np.sqrt(
+            1 / n + np.mean(x_values) ** 2 /
+            np.sum((x_values - np.mean(x_values)) ** 2)
+        )
     else:
         raise ValueError("Invalid b_type. Use 'b0' or 'b1'.")
     return (b_estimates - true_value) / denominator
+
 
 def plot_distributions(t_statistics, theoretical_dist, title_prefix):
     """Plot empirical and theoretical distributions."""
@@ -93,14 +105,19 @@ def plot_distributions(t_statistics, theoretical_dist, title_prefix):
     fig, axs = plt.subplots(1, 2, figsize=(12, 5))
 
     # Plot PDF
-    axs[0].hist(t_statistics, density=True, bins=20, alpha=0.5, label="Empirical PDF")
-    axs[0].plot(xs, theoretical_dist.pdf(xs), label="Theoretical PDF", color="red", alpha=0.7)
+    axs[0].hist(t_statistics, density=True, bins=20,
+                alpha=0.5, label="Empirical PDF")
+    axs[0].plot(
+        xs, theoretical_dist.pdf(xs), label="Theoretical PDF", color="red", alpha=0.7
+    )
     axs[0].set_title(f"{title_prefix} PDF")
     axs[0].legend()
 
     # Plot CDF
     axs[1].plot(ecdf.x, ecdf.y, label="Empirical CDF")
-    axs[1].plot(xs, theoretical_dist.cdf(xs), label="Theoretical CDF", color="red", alpha=0.7)
+    axs[1].plot(
+        xs, theoretical_dist.cdf(xs), label="Theoretical CDF", color="red", alpha=0.7
+    )
     axs[1].set_title(f"{title_prefix} CDF")
     axs[1].legend()
 
@@ -125,7 +142,6 @@ def generate_dependent_variable(x_values, b0, b1, sigma):
     return b1 * x_values + b0 + np.random.normal(0, scale=sigma, size=len(x_values))
 
 
-
 def estimate_coefficients(x_values, y_values):
     """
     Estimate coefficients using Ordinary Least Squares (OLS).
@@ -137,9 +153,12 @@ def estimate_coefficients(x_values, y_values):
     Returns:
         tuple: Estimated intercept (b0) and slope (b1).
     """
-    b1 = np.sum((x_values - np.mean(x_values)) * y_values) / np.sum((x_values - np.mean(x_values)) ** 2)
+    b1 = np.sum((x_values - np.mean(x_values)) * y_values) / np.sum(
+        (x_values - np.mean(x_values)) ** 2
+    )
     b0 = np.mean(y_values) - b1 * np.mean(x_values)
     return b0, b1
+
 
 def calculate_residual_variance(x_values, y_values, b0, b1, num_samples):
     """
@@ -156,7 +175,8 @@ def calculate_residual_variance(x_values, y_values, b0, b1, num_samples):
         float: Residual variance.
     """
     residuals = y_values - (b0 + b1 * x_values)
-    return np.sum(residuals ** 2) / (num_samples - 2)
+    return np.sum(residuals**2) / (num_samples - 2)
+
 
 def calculate_confidence_intervals(estimate, true_value, std_error, critical_value):
     """
@@ -175,6 +195,7 @@ def calculate_confidence_intervals(estimate, true_value, std_error, critical_val
     upper_bound = estimate + critical_value * std_error
     return (lower_bound <= true_value) & (upper_bound >= true_value)
 
+
 def calculate_b1_std_error_known(sigma, x_values):
     """
     Calculate the standard error for B1 with known variance.
@@ -187,6 +208,7 @@ def calculate_b1_std_error_known(sigma, x_values):
         float: Standard error for B1.
     """
     return (sigma**2 / np.sum((x_values - np.mean(x_values)) ** 2)) ** 0.5
+
 
 def calculate_b1_std_error_estimated(residual_variances, x_values):
     """
@@ -201,6 +223,7 @@ def calculate_b1_std_error_estimated(residual_variances, x_values):
     """
     return (residual_variances / np.sum((x_values - np.mean(x_values)) ** 2)) ** 0.5
 
+
 def calculate_b0_std_error_known(sigma, x_values, num_samples):
     """
     Calculate the standard error for B0 with known variance.
@@ -213,7 +236,15 @@ def calculate_b0_std_error_known(sigma, x_values, num_samples):
     Returns:
         float: Standard error for B0.
     """
-    return (sigma**2 * (1 / num_samples + np.mean(x_values)**2 / np.sum((x_values - np.mean(x_values)) ** 2))) ** 0.5
+    return (
+        sigma**2
+        * (
+            1 / num_samples
+            + np.mean(x_values) ** 2 /
+            np.sum((x_values - np.mean(x_values)) ** 2)
+        )
+    ) ** 0.5
+
 
 def calculate_b0_std_error_estimated(residual_variances, x_values, num_samples):
     """
@@ -227,17 +258,122 @@ def calculate_b0_std_error_estimated(residual_variances, x_values, num_samples):
     Returns:
         np.ndarray: Standard error for B0.
     """
-    return (residual_variances * (1 / num_samples + np.mean(x_values)**2 / np.sum((x_values - np.mean(x_values)) ** 2))) ** 0.5
+    return (
+        residual_variances
+        * (
+            1 / num_samples
+            + np.mean(x_values) ** 2 /
+            np.sum((x_values - np.mean(x_values)) ** 2)
+        )
+    ) ** 0.5
 
 
-def calculate_prediction_intervals(x_full, x_train, b0, b1, residual_variance, z_critical):
+def calculate_prediction_intervals(
+    x_full, x_train, b0, b1, residual_variance, z_critical
+):
     """Calculate prediction intervals."""
     y_pred = b0 + b1 * x_full
 
     n_train = len(x_train)
     x_muean = np.mean(x_train)
-    x_minus_mean_squared = (x_train - x_muean)**2
-    se = np.sqrt(residual_variance * (1 + 1/n_train + x_minus_mean_squared / np.sum(x_minus_mean_squared)))
+    x_minus_mean_squared = (x_train - x_muean) ** 2
+    se = np.sqrt(
+        residual_variance
+        * (1 + 1 / n_train + x_minus_mean_squared / np.sum(x_minus_mean_squared))
+    )
     y_pred_lower = y_pred - z_critical * se
     y_pred_upper = y_pred + z_critical * se
     return y_pred, y_pred_lower, y_pred_upper
+
+
+def calculate_r_squared(y, predicted_y):
+    """
+    Calculate the coefficient of determination (R-squared).
+    """
+    ss_total = np.sum((y - np.mean(y)) ** 2)
+    ss_residual = np.sum((y - predicted_y) ** 2)
+    return 1 - (ss_residual / ss_total)
+
+
+def empirical_acf(data, max_lag):
+    """Calculate the empirical autocovariance function (ACVF) up to a given maximum lag."""
+    n = len(data)
+    mean = np.mean(data)
+    acf = []
+    for lag in range(max_lag + 1):
+        cov = np.sum((data[: n - lag] - mean) * (data[lag:] - mean)) / n
+        acf.append(cov)
+    return np.array(acf)
+
+
+def empirical_autocovariance(series, lag):
+    """
+    Calculate the empirical autocovariance of a time series at a given lag.
+
+    Parameters:
+    series (np.ndarray): The time series data.
+    lag (int): The lag at which to calculate the autocovariance.
+
+    Returns:
+    float: The empirical autocovariance at the specified lag.
+    """
+    n = len(series)
+    mean = np.mean(series)
+    lag = abs(lag)  # Ensure lag is non-negative
+    covariance = np.sum((series[lag:] - mean) * (series[: n - lag] - mean)) / n
+    return covariance
+
+
+def estimate_ar_parameters(xt, h):
+    """
+    Estimate parameters for an AR(2) process using empirical autocovariance.
+
+    Parameters:
+    xt (numpy.ndarray): Time series data.
+
+    Returns:
+    tuple: Estimated sigma squared, phi1, and phi2.
+    """
+    m = np.array(
+        [[empirical_autocovariance(xt, abs(i - j))
+          for i in range(h)] for j in range(h)]
+    )
+    m_inv = np.linalg.inv(m)
+    vec = np.array([empirical_autocovariance(xt, i) for i in range(1, h + 1)])
+    phi = np.dot(m_inv, vec)
+    est_sig = empirical_autocovariance(xt, 0) - np.dot(phi, vec)
+    return est_sig, phi[0], phi[1]
+
+
+def empirical_pacf(data, max_lag):
+    """
+    Compute the empirical partial autocovariance function (PACF) for a given time series.
+
+    Parameters:
+        data (numpy.ndarray): The time series data.
+        max_lag (int): The maximum lag for which to compute the PACF.
+
+    Returns:
+        list: The empirical PACF values for lags from 0 to max_lag.
+    """
+    pacf_values = [1]  # PACF at lag 0 is always 1
+    for lag in range(1, max_lag + 1):
+        # Create the autocovariance matrix and vector
+        autocov_matrix = np.array(
+            [
+                [empirical_autocovariance(data, abs(i - j))
+                 for i in range(lag)]
+                for j in range(lag)
+            ]
+        )
+        autocov_vector = np.array(
+            [empirical_autocovariance(data, i) for i in range(1, lag + 1)]
+        )
+
+        # Solve for the PACF coefficients using the Yule-Walker equations
+        pacf_coefficients = np.linalg.solve(autocov_matrix, autocov_vector)
+        pacf_values.append(
+            pacf_coefficients[-1]
+        )  # Append the last coefficient (phi_hh)
+
+    return pacf_values
