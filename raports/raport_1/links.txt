@@ -1,0 +1,3 @@
+https://datahub.io/AcckiyGerman/gold-prices#data
+
+https://finance.yahoo.com/quote/BTC-USD/history?period1=1410912000&period2=1639180800&interval=1mo&filter=history&frequency=1mo&includeAdjustedClose=true
